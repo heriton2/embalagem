@@ -80,30 +80,90 @@ public class EmpacotamentoServiceImpl implements EmpacotamentoService {
     }
 
     private boolean grupoCabeNaCaixa(List<Produto> grupo, Caixa caixa) {
+        Dimensao dimCaixa = caixa.getDimensoes();
 
-        int somaAltura = grupo.stream().mapToInt(p -> p.getDimensoes().getAltura()).sum();
-        int maxLargura = grupo.stream().mapToInt(p -> p.getDimensoes().getLargura()).max().orElse(0);
-        int maxComprimento = grupo.stream().mapToInt(p -> p.getDimensoes().getComprimento()).max().orElse(0);
+        List<List<Dimensao>> combinacoesDeOrientacoesDoGrupo = gerarCombinacoesDeOrientacoesParaGrupo(grupo);
 
-        int somaLargura = grupo.stream().mapToInt(p -> p.getDimensoes().getLargura()).sum();
-        int maxAltura = grupo.stream().mapToInt(p -> p.getDimensoes().getAltura()).max().orElse(0);
-        int maxComprimento2 = grupo.stream().mapToInt(p -> p.getDimensoes().getComprimento()).max().orElse(0);
+        for (List<Dimensao> umaCombinacaoDeOrientacoes : combinacoesDeOrientacoesDoGrupo) {
 
-        int somaComprimento = grupo.stream().mapToInt(p -> p.getDimensoes().getComprimento()).sum();
-        int maxAltura2 = grupo.stream().mapToInt(p -> p.getDimensoes().getAltura()).max().orElse(0);
-        int maxLargura2 = grupo.stream().mapToInt(p -> p.getDimensoes().getLargura()).max().orElse(0);
+            int sumH = 0;
+            int maxW_for_sumH = 0;
+            int maxL_for_sumH = 0;
+            for (Dimensao dimProdutoOrientado : umaCombinacaoDeOrientacoes) {
+                sumH += dimProdutoOrientado.getAltura();
+                maxW_for_sumH = Math.max(maxW_for_sumH, dimProdutoOrientado.getLargura());
+                maxL_for_sumH = Math.max(maxL_for_sumH, dimProdutoOrientado.getComprimento());
+            }
+            if (sumH <= dimCaixa.getAltura() &&
+                    maxW_for_sumH <= dimCaixa.getLargura() &&
+                    maxL_for_sumH <= dimCaixa.getComprimento()) {
+                return true;
+            }
 
-        return (
-                (somaAltura <= caixa.getDimensoes().getAltura() &&
-                        maxLargura <= caixa.getDimensoes().getLargura() &&
-                        maxComprimento <= caixa.getDimensoes().getComprimento()) ||
-                        (somaLargura <= caixa.getDimensoes().getLargura() &&
-                                maxAltura <= caixa.getDimensoes().getAltura() &&
-                                maxComprimento2 <= caixa.getDimensoes().getComprimento()) ||
-                        (somaComprimento <= caixa.getDimensoes().getComprimento() &&
-                                maxAltura2 <= caixa.getDimensoes().getAltura() &&
-                                maxLargura2 <= caixa.getDimensoes().getLargura())
-        );
+            int maxH_for_sumW = 0;
+            int sumW = 0;
+            int maxL_for_sumW = 0;
+            for (Dimensao dimProdutoOrientado : umaCombinacaoDeOrientacoes) {
+                maxH_for_sumW = Math.max(maxH_for_sumW, dimProdutoOrientado.getAltura());
+                sumW += dimProdutoOrientado.getLargura();
+                maxL_for_sumW = Math.max(maxL_for_sumW, dimProdutoOrientado.getComprimento());
+            }
+            if (maxH_for_sumW <= dimCaixa.getAltura() &&
+                    sumW <= dimCaixa.getLargura() &&
+                    maxL_for_sumW <= dimCaixa.getComprimento()) {
+                return true;
+            }
+
+            int maxH_for_sumL = 0;
+            int maxW_for_sumL = 0;
+            int sumL = 0;
+            for (Dimensao dimProdutoOrientado : umaCombinacaoDeOrientacoes) {
+                maxH_for_sumL = Math.max(maxH_for_sumL, dimProdutoOrientado.getAltura());
+                maxW_for_sumL = Math.max(maxW_for_sumL, dimProdutoOrientado.getLargura());
+                sumL += dimProdutoOrientado.getComprimento();
+            }
+            if (maxH_for_sumL <= dimCaixa.getAltura() &&
+                    maxW_for_sumL <= dimCaixa.getLargura() &&
+                    sumL <= dimCaixa.getComprimento()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private List<List<Dimensao>> gerarCombinacoesDeOrientacoesParaGrupo(List<Produto> grupo) {
+        List<List<Dimensao>> rotacoesPorProduto = new ArrayList<>();
+
+        for (Produto produto : grupo) {
+            Dimensao dim = produto.getDimensoes();
+            List<Dimensao> rotacoes = Arrays.asList(
+                    new Dimensao(dim.getAltura(), dim.getLargura(), dim.getComprimento()),
+                    new Dimensao(dim.getAltura(), dim.getComprimento(), dim.getLargura()),
+                    new Dimensao(dim.getLargura(), dim.getAltura(), dim.getComprimento()),
+                    new Dimensao(dim.getLargura(), dim.getComprimento(), dim.getAltura()),
+                    new Dimensao(dim.getComprimento(), dim.getAltura(), dim.getLargura()),
+                    new Dimensao(dim.getComprimento(), dim.getLargura(), dim.getAltura())
+            );
+            rotacoesPorProduto.add(rotacoes);
+        }
+
+        return combinarOrientacoes(rotacoesPorProduto, 0, new ArrayList<>(), new ArrayList<>());
+    }
+
+    private List<List<Dimensao>> combinarOrientacoes(List<List<Dimensao>> rotacoesDisponiveisPorProduto, int indexProdutoAtual, List<Dimensao> combinacaoAtual, List<List<Dimensao>> todasCombinacoes) {
+        if (indexProdutoAtual == rotacoesDisponiveisPorProduto.size()) {
+            todasCombinacoes.add(new ArrayList<>(combinacaoAtual));
+            return todasCombinacoes;
+        }
+
+        for (Dimensao rotacao : rotacoesDisponiveisPorProduto.get(indexProdutoAtual)) {
+            combinacaoAtual.add(rotacao);
+            combinarOrientacoes(rotacoesDisponiveisPorProduto, indexProdutoAtual + 1, combinacaoAtual, todasCombinacoes);
+            combinacaoAtual.remove(combinacaoAtual.size() - 1);
+        }
+
+        return todasCombinacoes;
     }
 
     private List<List<Produto>> combinacoes(List<Produto> produtos, int k) {
