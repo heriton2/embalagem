@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Produto {
-    private String id;
-    private Dimensao dimensoes;
+  private String id;
+  private Dimensao dimensoes;
 }

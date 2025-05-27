@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProdutoDTO {
-    private String produto_id;
-    private DimensaoDTO dimensoes;
+  private String produto_id;
+  private DimensaoDTO dimensoes;
 }

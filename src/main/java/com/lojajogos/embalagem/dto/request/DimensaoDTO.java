@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DimensaoDTO {
-    private int altura;
-    private int largura;
-    private int comprimento;
+  private int altura;
+  private int largura;
+  private int comprimento;
 }
