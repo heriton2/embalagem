@@ -115,15 +115,15 @@ curl -X POST http://localhost:8080/api/v1/embalagens \
 
 O algoritmo de empacotamento (EmpacotamentoServiceImpl) funciona da seguinte forma para cada pedido:
 
-1. *Ordenação Inicial*: Os produtos do pedido são ordenados em ordem decrescente de volume.
-2. *Tentativa de Combinação*: Para cada tipo de caixa (da menor para a maior):
+1. **Ordenação Inicial**: Os produtos do pedido são ordenados em ordem decrescente de volume.
+2. **Tentativa de Combinação**: Para cada tipo de caixa (da menor para a maior):
    - Gera todas as possíveis combinações de produtos, começando com os maiores grupos
    - Verifica se cada combinação cabe na caixa atual, considerando todas as 6 possíveis orientações do produto
    - Seleciona a combinação que maximiza o uso da caixa (maior número de produtos ou maior volume)
-3. *Alocação Recursiva*:
+3. **Alocação Recursiva**:
    - Após alocar produtos em uma caixa, o algoritmo continua com os produtos restantes
    - Tenta usar a menor caixa possível para cada grupo de produtos
-4. *Produtos não Alocáveis*: Produtos que não cabem em nenhuma caixa disponível são marcados com uma observação especial e colocados em uma "caixa especial"
+4. **Produtos não Alocáveis**: Produtos que não cabem em nenhuma caixa disponível são marcados com uma observação especial e colocados em uma "caixa especial"
 
 O algoritmo utiliza uma abordagem recursiva e combinatória para encontrar a melhor alocação possível de produtos em caixas, minimizando o número total de caixas necessárias.
 

@@ -13,10 +13,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class EmpacotamentoServiceImpl implements EmpacotamentoService {
+
+  private static final Logger log = LoggerFactory.getLogger(EmpacotamentoServiceImpl.class);
 
   private static final List<Caixa> TIPOS_CAIXAS =
       Arrays.asList(
@@ -26,6 +30,10 @@ public class EmpacotamentoServiceImpl implements EmpacotamentoService {
 
   @Override
   public PedidoResponseDTO processar(Pedido pedido) {
+    log.info(
+        "Iniciando empacotamento para pedido ID: {}. Produtos: {}",
+        pedido.getId(),
+        pedido.getProdutos().size());
     List<Produto> produtosRestantes = new ArrayList<>(pedido.getProdutos());
     produtosRestantes.sort(
         Comparator.comparing((Produto p) -> p.getDimensoes().getVolume()).reversed());
@@ -56,16 +64,28 @@ public class EmpacotamentoServiceImpl implements EmpacotamentoService {
         caixaEspecial.adicionarProduto(produtoNaoEncaixa);
         caixasUtilizadas.add(caixaEspecial);
         produtosRestantes.remove(0);
+        log.warn(
+            "Produto {} (Pedido ID: {}) não coube em nenhuma caixa padrão. Será colocado em caixa especial.",
+            produtoNaoEncaixa.getId(),
+            pedido.getId());
       }
     }
 
     List<CaixaDTO> caixasDTO =
         caixasUtilizadas.stream().map(this::converterParaCaixaDTO).collect(Collectors.toList());
 
+    log.info(
+        "Empacotamento concluído para pedido ID: {}. Caixas utilizadas: {}",
+        pedido.getId(),
+        caixasUtilizadas.size());
     return new PedidoResponseDTO(pedido.getId(), caixasDTO);
   }
 
   private List<Produto> encontrarMaiorGrupoQueCabe(List<Produto> produtos, Caixa caixa) {
+    log.debug(
+        "Tentando encontrar maior grupo de {} produtos para a caixa {}",
+        produtos.size(),
+        caixa.getId());
     int n = produtos.size();
     for (int k = n; k >= 1; k--) {
       List<List<Produto>> combinacoes = combinacoes(produtos, k);
