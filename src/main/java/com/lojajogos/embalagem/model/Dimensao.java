@@ -8,11 +8,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Dimensao {
-    private int altura;
-    private int largura;
-    private int comprimento;
+  private int altura;
+  private int largura;
+  private int comprimento;
 
-    public int getVolume() {
-        return altura * largura * comprimento;
-    }
+  public int getVolume() {
+    return altura * largura * comprimento;
+  }
 }
